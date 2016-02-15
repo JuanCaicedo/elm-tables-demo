@@ -13,29 +13,48 @@ type alias Legislator =
 
 
 type alias Model =
-  List Legislator
+  { selectedLegislators: List Legislator
+  , availableLegislators: List Legislator
+  }
 
 
-initialModel: List Legislator
+initialModel: Model
 initialModel =
-  [
-    { firstName = "Juan"
-    , lastName = "Caicedo"
-    }
-  , { firstName = "Carson"
-    , lastName = "Banov"
-    }
-  ]
+  { selectedLegislators = [
+      { firstName = "Juan"
+      , lastName = "Caicedo"
+      }
+    , { firstName = "Carson"
+      , lastName = "Banov"
+      }
+    ]
+  , availableLegislators = [
+      { firstName = "Senator"
+      , lastName = "1"
+      }
+    , { firstName = "Senator"
+      , lastName = "2"
+      }
+    ]
+  }
 
 
 view: Signal.Address a -> Model -> Html
 view address model =
+  table
+    []
+    [ legislatorTable "Your team" model.selectedLegislators
+    , legislatorTable "Available" model.availableLegislators
+    ]
+
+
+legislatorTable tableTitle legislators =
   div
     []
-    [ h1 [] [ text "Your team" ]
+    [ h1 [] [ text tableTitle ]
     , table
         []
-        (List.map legislatorView model)
+        (List.map legislatorView legislators)
     ]
 
 
