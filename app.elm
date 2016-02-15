@@ -4,15 +4,32 @@ import Html exposing (..)
 import StartApp
 import Effects exposing (Effects, Never)
 
+type alias Model =
+  { firstName: String
+  , lastName: String
+  }
 
-type alias Model = String
+initialModel: Model
+initialModel =
+  { firstName = "Juan"
+  , lastName = "Caicedo"
+  }
 
 
-initialModel = "Fantasy Legislature"
-
-
+view: Signal.Address a -> Model -> Html
 view address model =
-  h1 [] [ text model ]
+  div
+    []
+    [ h1 [] [ text "Your team" ]
+    , table
+        []
+        [ tr
+            []
+            [ td [] [ text model.firstName ]
+            , td [] [ text model.lastName ]
+            ]
+        ]
+    ]
 
 
 update action model =
@@ -21,11 +38,11 @@ update action model =
 
 app =
   StartApp.start
-            { init = (initialModel, Effects.none)
-            , update = update
-            , view = view
-            , inputs = []
-            }
+    { init = (initialModel, Effects.none)
+    , update = update
+    , view = view
+    , inputs = []
+    }
 
 
 main =
