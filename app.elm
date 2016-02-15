@@ -3,17 +3,29 @@ module FantasyLegislature where
 import Html exposing (..)
 import StartApp
 import Effects exposing (Effects, Never)
+import List
 
-type alias Model =
+
+type alias Legislator =
   { firstName: String
   , lastName: String
   }
 
-initialModel: Model
+
+type alias Model =
+  List Legislator
+
+
+initialModel: List Legislator
 initialModel =
-  { firstName = "Juan"
-  , lastName = "Caicedo"
-  }
+  [
+    { firstName = "Juan"
+    , lastName = "Caicedo"
+    }
+  , { firstName = "Carson"
+    , lastName = "Banov"
+    }
+  ]
 
 
 view: Signal.Address a -> Model -> Html
@@ -23,12 +35,16 @@ view address model =
     [ h1 [] [ text "Your team" ]
     , table
         []
-        [ tr
-            []
-            [ td [] [ text model.firstName ]
-            , td [] [ text model.lastName ]
-            ]
-        ]
+        (List.map legislatorView model)
+    ]
+
+
+legislatorView: Legislator -> Html
+legislatorView legislator =
+  tr
+    []
+    [ td [] [ text legislator.firstName ]
+    , td [] [ text legislator.lastName ]
     ]
 
 
