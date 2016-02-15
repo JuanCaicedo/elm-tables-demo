@@ -1,9 +1,19 @@
 module FantasyLegislature where
 
 import Html exposing (..)
+import Html.Events exposing (..)
 import StartApp
 import Effects exposing (Effects, Never)
 import List
+
+
+type Action
+  = Toggle Choice Legislator
+
+
+type Choice
+  = Select
+  | Drop
 
 
 type alias Legislator =
@@ -39,36 +49,55 @@ initialModel =
   }
 
 
-view: Signal.Address a -> Model -> Html
+view: Signal.Address Action -> Model -> Html
 view address model =
   table
     []
-    [ legislatorTable "Your team" model.selectedLegislators
-    , legislatorTable "Available" model.availableLegislators
+    [ legislatorTable address Drop "Your team" model.selectedLegislators
+    , legislatorTable address Select "Available" model.availableLegislators
     ]
 
 
-legislatorTable tableTitle legislators =
+legislatorTable: Signal.Address Action -> Choice -> String -> List Legislator -> Html
+legislatorTable address choice tableTitle legislators =
   div
     []
     [ h1 [] [ text tableTitle ]
     , table
         []
-        (List.map legislatorView legislators)
+        (List.map (legislatorView address choice) legislators)
     ]
 
 
-legislatorView: Legislator -> Html
-legislatorView legislator =
+legislatorView: Signal.Address Action -> Choice -> Legislator -> Html
+legislatorView address choice legislator =
   tr
-    []
+    [ onClick address (Toggle choice legislator) ]
     [ td [] [ text legislator.firstName ]
     , td [] [ text legislator.lastName ]
     ]
 
 
 update action model =
-  (model, Effects.none)
+  case action of
+    Toggle choice legislator ->
+      let
+        legislatorFilter currentLegislator =
+          not (currentLegislator.firstName == legislator.firstName &&  currentLegislator.lastName == legislator.lastName )
+      in
+        case choice of
+         Drop ->
+           ({ model
+              | availableLegislators = legislator :: model.availableLegislators
+              , selectedLegislators = (List.filter legislatorFilter model.selectedLegislators)
+              }
+           , Effects.none)
+         Select ->
+           ({ model
+              | selectedLegislators = legislator :: model.selectedLegislators
+              , availableLegislators = (List.filter legislatorFilter model.availableLegislators)
+              }
+           , Effects.none)
 
 
 app =
