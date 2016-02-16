@@ -2,13 +2,17 @@ module FantasyLegislature where
 
 import Html exposing (..)
 import Html.Events exposing (..)
+import Http
+import Task
 import StartApp
 import Effects exposing (Effects, Never)
 import List
+import Json.Decode as Json exposing ((:=))
 
 
 type Action
   = Toggle Choice Legislator
+  | PopulateAvailableLegislators (Result Http.Error (List Legislator))
 
 
 type Choice
@@ -28,7 +32,6 @@ type alias Model =
   }
 
 
-initialModel: Model
 initialModel =
   { selectedLegislators = [
       { firstName = "Juan"
@@ -40,10 +43,10 @@ initialModel =
     ]
   , availableLegislators = [
       { firstName = "Senator"
-      , lastName = "1"
+      , lastName = "one"
       }
     , { firstName = "Senator"
-      , lastName = "2"
+      , lastName = "two"
       }
     ]
   }
@@ -98,11 +101,46 @@ update action model =
               , availableLegislators = (List.filter legislatorFilter model.availableLegislators)
               }
            , Effects.none)
+    PopulateAvailableLegislators result ->
+      case result of
+        Ok legislators ->
+          ({ model
+             | availableLegislators = legislators
+           }
+          , Effects.none)
+        Err error ->
+          (model, Effects.none)
+
+
+legislatorDecoder : Json.Decoder (List Legislator)
+legislatorDecoder =
+  let
+    result =
+      Json.object2 Legislator
+        ("first_name" := Json.string)
+        ("last_name" := Json.string)
+  in
+    "results" := Json.list result
+
+
+legislatorsUrl =
+  Http.url "https:congress.api.sunlightfoundation.com/legislators"
+    [ ("apikey", "d6ef0d61cbd241bc9d89109e4f70e128")
+    , ("per_page", "all")
+    ]
+
+
+getLegislators : Effects Action
+getLegislators =
+  Http.get legislatorDecoder legislatorsUrl
+    |> Task.toResult
+    |> Task.map PopulateAvailableLegislators
+    |> Effects.task
 
 
 app =
   StartApp.start
-    { init = (initialModel, Effects.none)
+    { init = (initialModel, getLegislators)
     , update = update
     , view = view
     , inputs = []
@@ -111,3 +149,8 @@ app =
 
 main =
   app.html
+
+
+port runner : Signal (Task.Task Never())
+port runner =
+  app.tasks
